@@ -50,7 +50,6 @@ impl<'a, T> Iterator for MaxFrontTokenizer<'a, T> {
                             continue;
                         }
                         Status::LastEnd => {
-                            println!("lastend");
                             let start = self.start;
                             let end: usize = self.start + i + c_len;
                             self.start = end;
@@ -222,7 +221,6 @@ impl<'a, T> Tokenizer<'a, T> {
                             continue;
                         }
                         Status::LastEnd => {
-                            println!("lastend");
                             let start = self.start;
                             let end: usize = self.start + i + c_len;
                             self.start = end;

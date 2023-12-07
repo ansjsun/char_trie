@@ -1,3 +1,23 @@
+//! # 一个trie树结构，并且实现了，正向最大匹配和全词匹配
+//!
+//!
+//! Licensed under either of
+//! * Apache License, Version 2.0,
+//! (./LICENSE-APACHE or <http://www.apache.org/licenses/LICENSE-2.0>)
+//! * MIT license (./LICENSE-MIT or <http://opensource.org/licenses/MIT>)
+//! at your option.
+//!
+//! ## Examples
+//!
+//! All examples are in the [sub-repository](https://github.com/ansjsun/char_trie/examples), located in the examples directory.
+//!
+//!
+//! ```example
+//! cd test
+//! cargo run --package char_trie --example example
+//! ```
+//!
+
 pub mod tokenizer;
 
 use std::str::Chars;
@@ -7,6 +27,10 @@ use tokenizer::MaxFrontTokenizer;
 
 pub type Tokenizer<'a, T> = tokenizer::Tokenizer<'a, T>;
 
+/// 叶子结点状态，
+/// Not 不是一个词
+/// End 是一个词，但不是最后一个词
+/// LastEnd 是一个词，也是最后一个词
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(crate) enum Status {
     #[default]
@@ -15,6 +39,8 @@ pub(crate) enum Status {
     LastEnd,
 }
 
+/// 叶子结点，包含一个字符，状态，值，和子节点
+/// Big 是一个大的节点，用于存储所有的字符，可以有效加速查询和词典加载速度，但是较耗费空间
 #[derive(Debug)]
 enum Leafs<T> {
     Big(Vec<Option<Trie<T>>>),
@@ -82,6 +108,15 @@ impl<T> Leafs<T> {
     }
 }
 
+/// Trie 树，用于存储词典
+/// # Examples
+/// ```rust
+/// use char_trie::Trie;
+/// let mut trie = Trie::default();
+/// trie.insert("中国人", "cns");
+/// assert_eq!(trie.get("中国人"), Some("cns").as_ref());
+/// assert_eq!(trie.get("中国"), None);
+///
 #[derive(Debug, Default)]
 pub struct Trie<T> {
     c: char,
@@ -91,6 +126,15 @@ pub struct Trie<T> {
 }
 
 impl<T> Trie<T> {
+    /// 创建一个新的 Trie 树, 对于超大词典作了优化，可以有效加速词典加载速度，但是较耗费空间
+    /// # Examples
+    /// ```rust
+    /// use char_trie::Trie;
+    /// let mut trie = Trie::new_big();
+    /// trie.insert("中国人", "cns");
+    /// assert_eq!(trie.get("中国人"), Some("cns").as_ref());
+    /// assert_eq!(trie.get("中国"), None);
+    /// ```
     pub fn new_big() -> Self {
         Self {
             c: '\0',
@@ -100,6 +144,36 @@ impl<T> Trie<T> {
         }
     }
 
+    /// 插入一个词到trie树中
+    /// key 词
+    /// value 词的值
+    /// # Examples
+    /// ```rust
+    /// use char_trie::Trie;
+    /// let mut trie = Trie::default();
+    /// trie.insert("中国人", "cns");
+    /// assert_eq!(trie.get("中国人"), Some("cns").as_ref());
+    /// assert_eq!(trie.get("中国"), None);
+    /// ```
+    pub fn insert(&mut self, key: &str, value: T) {
+        if key.is_empty() {
+            return;
+        }
+        self.inner_insert(key.chars(), value)
+    }
+
+    pub fn get(&self, key: &str) -> Option<&T> {
+        if key.is_empty() {
+            return None;
+        }
+
+        let trie = self.inner_get(key.chars())?;
+        if trie.status == Status::End || trie.status == Status::LastEnd {
+            return trie.value.as_ref();
+        }
+        return None;
+    }
+
     fn new(c: char) -> Self {
         Trie {
             c,
@@ -107,13 +181,6 @@ impl<T> Trie<T> {
             value: None,
             leafs: Leafs::Small(Vec::new()),
         }
-    }
-
-    pub fn insert(&mut self, key: &str, value: T) {
-        if key.is_empty() {
-            return;
-        }
-        self.inner_insert(key.chars(), value)
     }
 
     fn inner_insert(&mut self, cs: Chars<'_>, value: T) {
@@ -149,18 +216,6 @@ impl<T> Trie<T> {
         return;
     }
 
-    pub fn get(&self, key: &str) -> Option<&T> {
-        if key.is_empty() {
-            return None;
-        }
-
-        let trie = self.inner_get(key.chars())?;
-        if trie.status == Status::End || trie.status == Status::LastEnd {
-            return trie.value.as_ref();
-        }
-        return None;
-    }
-
     fn inner_get(&self, cs: Chars<'_>) -> Option<&Self> {
         let mut trie = self;
 
@@ -185,10 +240,36 @@ impl<T> Trie<T> {
         }
     }
 
+    /// 实现了全词匹配， 如词典中包含 【中国，国人，中国人】 三个词，那么对于文本 “我是中国人” 将返回
+    /// [中国，国人，中国人]
+    /// # Examples
+    /// ```rust
+    /// use char_trie::Trie;
+    /// let mut trie = Trie::default();
+    /// trie.insert("中国人", "cns");
+    /// trie.insert("中国", "cn");
+    /// trie.insert("国人", "gr");
+    /// let text = "我是中国人";
+    /// let tokens: Vec<_> = trie.iter_all(text).map(|t| t.0).collect();
+    /// assert_eq!(tokens, vec!["中国", "中国人", "国人"]);
+    /// ```
     pub fn iter_all<'a>(&'a self, text: &'a str) -> AllTokenizer<'a, T> {
         AllTokenizer::new(self, text)
     }
 
+    /// 实现了正向最大匹配， 如词典中包含 【中国，国人，中国人】 三个词，那么对于文本 “我是中国人” 将返回
+    /// [中国人]
+    /// # Examples
+    /// ```rust
+    /// use char_trie::Trie;
+    /// let mut trie = Trie::default();
+    /// trie.insert("中国人", "cns");
+    /// trie.insert("中国", "cn");
+    /// trie.insert("国人", "gr");
+    /// let text = "我是中国人";
+    /// let tokens: Vec<_> = trie.iter_max(text).map(|t| t.0).collect();
+    /// assert_eq!(tokens, vec!["中国人"]);
+    /// ```
     pub fn iter_max<'a>(&'a self, text: &'a str) -> MaxFrontTokenizer<'a, T> {
         MaxFrontTokenizer::new(self, text)
     }
