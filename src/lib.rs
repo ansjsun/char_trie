@@ -3,6 +3,8 @@ mod tokenizer;
 use std::str::Chars;
 
 pub type Tokenizer<'a, T> = tokenizer::Tokenizer<'a, T>;
+pub type MaxFrontTokenizer<'a, T> = tokenizer::MaxFrontTokenizer<'a, T>;
+pub type AllTokenizer<'a, T> = tokenizer::AllTokenizer<'a, T>;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(crate) enum Status {

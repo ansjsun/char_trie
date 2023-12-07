@@ -1,11 +1,9 @@
-use char_trie::{AllTokenizer, Trie};
+use char_trie::{MaxFrontTokenizer, Tokenizer, Trie};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 pub fn main() {
-    // let mut trie = Trie::default();
-    let mut trie = Trie::new_big();
-
+    let mut trie = Trie::default();
     let start = std::time::Instant::now();
 
     for line in BufReader::new(File::open("dict/default.dic").unwrap()).lines() {
@@ -23,12 +21,12 @@ pub fn main() {
 
     println!("load dict use {:?}", start.elapsed());
 
-    let text = "我爱北京天安门，天安门上太阳升。我是中国人，我爱中国。";
+    let text = "我爱北京天安门,我是中国人，中华人民共和国我爱吃西瓜";
 
-    for token in AllTokenizer::new(&trie, text) {
+    for token in MaxFrontTokenizer::new(&trie, text) {
         println!("{:?}", token);
     }
 
-    let c: Vec<_> = AllTokenizer::new(&trie, text).map(|t| t.0).collect();
+    let c: Vec<_> = MaxFrontTokenizer::new(&trie, text).map(|t| t.0).collect();
     println!("{:?}", c);
 }
