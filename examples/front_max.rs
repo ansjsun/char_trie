@@ -1,4 +1,4 @@
-use char_trie::{MaxFrontTokenizer, Tokenizer, Trie};
+use char_trie::Trie;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -23,10 +23,10 @@ pub fn main() {
 
     let text = "我爱北京天安门,我是中国人，中华人民共和国我爱吃西瓜";
 
-    for token in MaxFrontTokenizer::new(&trie, text) {
+    for token in trie.iter_max(text) {
         println!("{:?}", token);
     }
 
-    let c: Vec<_> = MaxFrontTokenizer::new(&trie, text).map(|t| t.0).collect();
+    let c: Vec<_> = trie.iter_max(text).map(|t| t.0).collect();
     println!("{:?}", c);
 }

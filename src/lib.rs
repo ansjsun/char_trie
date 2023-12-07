@@ -1,10 +1,11 @@
-mod tokenizer;
+pub mod tokenizer;
 
 use std::str::Chars;
 
+use tokenizer::AllTokenizer;
+use tokenizer::MaxFrontTokenizer;
+
 pub type Tokenizer<'a, T> = tokenizer::Tokenizer<'a, T>;
-pub type MaxFrontTokenizer<'a, T> = tokenizer::MaxFrontTokenizer<'a, T>;
-pub type AllTokenizer<'a, T> = tokenizer::AllTokenizer<'a, T>;
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub(crate) enum Status {
@@ -182,5 +183,13 @@ impl<T> Trie<T> {
             Ok(index) => self.leafs.get(index),
             Err(_) => None,
         }
+    }
+
+    pub fn iter_all<'a>(&'a self, text: &'a str) -> AllTokenizer<'a, T> {
+        AllTokenizer::new(self, text)
+    }
+
+    pub fn iter_max<'a>(&'a self, text: &'a str) -> MaxFrontTokenizer<'a, T> {
+        MaxFrontTokenizer::new(self, text)
     }
 }

@@ -1,4 +1,4 @@
-use char_trie::{AllTokenizer, Trie};
+use char_trie::Trie;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -25,10 +25,10 @@ pub fn main() {
 
     let text = "我爱北京天安门，天安门上太阳升。我是中国人，我爱中国。";
 
-    for token in AllTokenizer::new(&trie, text) {
+    for token in trie.iter_all(text) {
         println!("{:?}", token);
     }
 
-    let c: Vec<_> = AllTokenizer::new(&trie, text).map(|t| t.0).collect();
+    let c: Vec<_> = trie.iter_all(text).map(|t| t.0).collect();
     println!("{:?}", c);
 }
