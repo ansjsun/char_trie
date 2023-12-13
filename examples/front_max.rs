@@ -17,16 +17,18 @@ pub fn main() {
         }
     }
 
-    trie.insert("中国人", (String::from("ud"), 10000));
-
     println!("load dict use {:?}", start.elapsed());
 
-    let text = "我爱北京天安门,我是中国人，中华人民共和国我爱吃西瓜";
+    let file = std::fs::read_to_string("dict/big_text.txt").unwrap();
 
-    for token in trie.iter_max(text) {
-        println!("{:?}", token);
-    }
+    let start = std::time::Instant::now();
+    let mut len = 0;
 
-    let c: Vec<_> = trie.iter_max(text).map(|t| t.0).collect();
-    println!("{:?}", c);
+    file.lines().for_each(|line| {
+        let result: Vec<_> = trie.iter_max(line).map(|t| t.0).collect();
+        len += result.len();
+        println!("{:?}", result);
+    });
+
+    println!("text parse token:{} use {:?}", len, start.elapsed());
 }
