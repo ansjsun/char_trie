@@ -146,7 +146,7 @@ impl<'a, T> Iterator for AllTokenizer<'a, T> {
                         Status::LastEnd => {
                             let start = self.start;
                             let end = self.end + i + c_len;
-                            self.start = self.start + self.first_len;
+                            self.start += self.first_len;
                             self.end = self.start;
                             self.trie = self.root;
                             return Some((
@@ -291,7 +291,7 @@ impl<'a, T> Tokenizer<'a, T> {
                         Status::LastEnd => {
                             let start = self.start;
                             let end = self.end + i + c_len;
-                            self.start = self.start + self.first_len;
+                            self.start += self.first_len;
                             self.end = self.start;
                             self.trie = self.root;
                             return Some((

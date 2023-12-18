@@ -59,9 +59,9 @@ impl<T> Leafs<T> {
             Leafs::Big(v) => {
                 let index = c as usize;
                 if v[index].is_none() {
-                    return Err(index);
+                    Err(index)
                 } else {
-                    return Ok(index);
+                    Ok(index)
                 }
             }
             Leafs::Small(v) => v.binary_search_by(|t| c.cmp(&t.c)),
@@ -169,9 +169,10 @@ impl<T> Trie<T> {
 
         let trie = self.inner_get(key.chars())?;
         if trie.status == Status::End || trie.status == Status::LastEnd {
-            return trie.value.as_ref();
+            trie.value.as_ref()
+        } else {
+            None
         }
-        return None;
     }
 
     fn new(c: char) -> Self {
@@ -213,7 +214,6 @@ impl<T> Trie<T> {
         } else {
             trie.status = Status::End;
         }
-        return;
     }
 
     fn inner_get(&self, cs: Chars<'_>) -> Option<&Self> {
